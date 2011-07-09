@@ -60,7 +60,7 @@ init (void)
 
 int main()
 {
-	fprintf(stderr, "ibus-wime started up.\n");
+	fprintf(stderr, "ibus-canna started up.\n");
     init ();
     ibus_main ();
 	return 0;

@@ -12,6 +12,9 @@ struct _IBusCannaEngine {
     gint cursor_pos;
 
     IBusLookupTable *table;
+
+	GString *text;
+	CannaUI *canna;
 };
 
 struct _IBusCannaEngineClass {
@@ -29,38 +32,46 @@ ibus_canna_engine_process_key_event
  guint               	 keyval,
  guint               	 keycode,
  guint               	 modifiers);
-static void ibus_canna_engine_focus_in    (IBusEngine             *engine);
-static void ibus_canna_engine_focus_out   (IBusEngine             *engine);
-static void ibus_canna_engine_reset       (IBusEngine             *engine);
-static void ibus_canna_engine_enable      (IBusEngine             *engine);
-static void ibus_canna_engine_disable     (IBusEngine             *engine);
-static void ibus_engine_set_cursor_location (IBusEngine             *engine,
+// static void ibus_canna_engine_focus_in    (IBusEngine             *engine);
+//static void ibus_canna_engine_focus_out   (IBusEngine             *engine);
+//static void ibus_canna_engine_reset       (IBusEngine             *engine);
+//static void ibus_canna_engine_enable      (IBusEngine             *engine);
+//static void ibus_canna_engine_disable     (IBusEngine             *engine);
+/*static void ibus_engine_set_cursor_location (IBusEngine             *engine,
                                              gint                    x,
                                              gint                    y,
                                              gint                    w,
-                                             gint                    h);
+                                             gint                    h);**/
+/*
 static void ibus_canna_engine_set_capabilities
 (IBusEngine             *engine,
- guint                   caps);
-static void ibus_canna_engine_page_up     (IBusEngine             *engine);
-static void ibus_canna_engine_page_down   (IBusEngine             *engine);
-static void ibus_canna_engine_cursor_up   (IBusEngine             *engine);
-static void ibus_canna_engine_cursor_down (IBusEngine             *engine);
+guint                   caps);*/
+ /*
+   static void ibus_canna_engine_page_up     (IBusEngine             *engine);*/
+ // static void ibus_canna_engine_page_down   (IBusEngine             *engine);
+ // static void ibus_canna_engine_cursor_up   (IBusEngine             *engine);
+ // static void ibus_canna_engine_cursor_down (IBusEngine             *engine);
+ /*
 static void ibus_canna_property_activate  (IBusEngine             *engine,
 										   const gchar            *prop_name,
-										   gint                    prop_state);
-static void ibus_canna_engine_property_show
+										   gint                    prop_state);*/
+ /*static void ibus_canna_engine_property_show
 (IBusEngine             *engine,
  const gchar            *prop_name);
 static void ibus_canna_engine_property_hide
 (IBusEngine             *engine,
  const gchar            *prop_name);
-
+ */
 static void ibus_canna_engine_commit_string
 (IBusCannaEngine      *canna,
  const gchar            *string);
 static void ibus_canna_engine_update      (IBusCannaEngine      *canna);
-}
+
+/*
+static void ibus_canna_engine_show_auxiliary_text(IBusCannaEngine *canna);
+static void ibus_canna_engine_hide_auxiliary_text(IBusCannaEngine *canna);
+*/
+} // end of extern C
 
 /*
   static EnchantBroker *broker = NULL;
@@ -83,9 +94,12 @@ static void ibus_canna_engine_init (IBusCannaEngine *engine)
 {
 	DEBUGM("canna_engine_init");
     engine->preedit = g_string_new ("");
+	engine->text = g_string_new("");
     engine->cursor_pos = 0;
 
     engine->table = ibus_lookup_table_new(9, 0, TRUE, TRUE);
+	CannaUISettings setting;
+	engine->canna = new CannaUI(&setting);
     g_object_ref_sink(engine->table);
 }
 
@@ -96,9 +110,17 @@ static void ibus_canna_engine_destroy (IBusCannaEngine *engine)
 		g_string_free (engine->preedit, TRUE);
 		engine->preedit = NULL;
 	}
+	if (engine->text != NULL) {
+		g_string_free (engine->text, TRUE);
+		engine->text = NULL;
+	}
 	if (engine->table != NULL) {
 		g_object_unref (engine->table);
 		engine->table = NULL;
+	}
+	if (engine->canna != NULL) {
+		delete engine->canna;
+		engine->canna = 0;
 	}
 	((IBusObjectClass *)ibus_canna_engine_parent_class)->destroy((IBusObject *)engine);
 }
@@ -118,19 +140,26 @@ static void ibus_canna_engine_update_lookup_table(IBusCannaEngine *engine) {
 	ibus_engine_update_lookup_table ((IBusEngine*)engine, engine->table, TRUE);
 }
 
-static void ibus_canna_engine_update_preedit (IBusCannaEngine *canna_engine) {
+static void ibus_canna_engine_update_preedit (IBusCannaEngine *engine) {
     IBusText *text;
-    text = ibus_text_new_from_static_string (canna_engine->preedit->str);
+    text = engine->canna->getEcho();
+/*
     text->attrs = ibus_attr_list_new ();
-    
-    ibus_attr_list_append(text->attrs,
-	                      ibus_attr_underline_new(IBUS_ATTR_UNDERLINE_SINGLE, 0, canna_engine->preedit->len));
-    ibus_attr_list_append(text->attrs,
-						  ibus_attr_foreground_new(0x0000ff, 0, canna_engine->preedit->len));
-    ibus_engine_update_preedit_text((IBusEngine*)canna_engine,
-									text,
-									canna_engine->cursor_pos,
-									TRUE);
+    ibus_attr_list_append(
+		text->attrs,
+		ibus_attr_underline_new(
+			IBUS_ATTR_UNDERLINE_SINGLE, 0,
+			#len));
+    ibus_attr_list_append(
+		text->attrs,
+		ibus_attr_foreground_new(
+			0x0000ff, 0, #len));
+*/
+	ibus_engine_update_preedit_text(
+			reinterpret_cast<IBusEngine*>(engine),
+			text,
+			0, //engine->cursor_pos,
+			TRUE);
 }
 
 /* commit preedit to client and update preedit */
@@ -154,18 +183,39 @@ static void ibus_canna_engine_commit_string(
 		const gchar *string)
 {
 	IBusText *text;
-	text = ibus_text_new_from_static_string(string);
+	text = ibus_text_new_from_string(string);
 	ibus_engine_commit_text((IBusEngine *)engine, text);
 }
 
 static void
-ibus_canna_engine_update (IBusCannaEngine *enchant)
+ibus_canna_engine_update(IBusCannaEngine *engine)
 {
-	ibus_canna_engine_update_preedit (enchant);
-	ibus_engine_hide_lookup_table ((IBusEngine *)enchant);
+	ibus_canna_engine_update_preedit(engine);
+	IBusText* kanjiList = engine->canna->getKanjiList();
+	if (kanjiList != 0) {
+		ibus_engine_update_auxiliary_text(
+			reinterpret_cast<IBusEngine*>(engine),
+			kanjiList, false);
+		ibus_engine_show_auxiliary_text(
+			reinterpret_cast<IBusEngine*>(engine));
+	} else {
+		ibus_engine_hide_auxiliary_text(
+			reinterpret_cast<IBusEngine*>(engine));
+	}
 }
 
 #define is_alpha(c) (((c) >= IBUS_a && (c) <= IBUS_z) || ((c) >= IBUS_A && (c) <= IBUS_Z))
+
+
+/*
+static void ibus_canna_engine_show_auxiliary_text(IBusCannaEngine* engine) {
+	ibus_engine_show_auxiliary_text(reinterpret_cast<IbusEngine*>engine);
+}
+
+static void ibus_canna_engine_hide_auxiliary_text(IBusCannaEngine* engine) {
+	ibus_engine_show_auxiliary_text(reinterpret_cast<IbusEngine*>engine);
+}
+*/
 
 static gboolean ibus_canna_engine_process_key_event(
 		IBusEngine *engine,
@@ -173,6 +223,23 @@ static gboolean ibus_canna_engine_process_key_event(
 		guint keycode,
 		guint  modifiers)
 {
+	IBusCannaEngine* cannaEngine = reinterpret_cast<IBusCannaEngine*>(engine);
+	std::string commitStr;
+
+	if (modifiers & IBUS_RELEASE_MASK) {
+		return FALSE;
+	}
+
+	DEBUGM("key_event\n");
+	int ret = cannaEngine->canna->sendKey(keyval, commitStr);
+	if (ret > 0) {
+		ibus_canna_engine_commit_string(cannaEngine, commitStr.c_str());
+	}
+
+	ibus_canna_engine_update(cannaEngine);
+	return TRUE;
+
+/*
 	IBusText *text;
 	IBusCannaEngine *enchant = (IBusCannaEngine *)engine;
 
@@ -196,10 +263,16 @@ static gboolean ibus_canna_engine_process_key_event(
 
 
     switch (keyval) {
-    case IBUS_space:
-		ibus_canna_engine_update_lookup_table (enchant);
-		ibus_engine_show_lookup_table(reinterpret_cast<IBusEngine*>(enchant));
+    case IBUS_space: {
+//		ibus_canna_engine_update_lookup_table (enchant);
+//		ibus_engine_show_lookup_table(reinterpret_cast<IBusEngine*>(enchant));
+		IBusText* itext = ibus_text_new_from_static_string("test");
+		ibus_engine_update_auxiliary_text(
+			reinterpret_cast<IBusEngine*>(engine),
+			itext, false	);
+		ibus_engine_show_auxiliary_text(reinterpret_cast<IBusEngine*>(engine));
 		return TRUE;
+	}
     case IBUS_Return:
         return ibus_canna_engine_commit_preedit (enchant);
 
@@ -282,4 +355,5 @@ static gboolean ibus_canna_engine_process_key_event(
     }
 
     return FALSE;
+*/
 }
