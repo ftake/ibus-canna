@@ -7,6 +7,8 @@
 #define CANNA_NEW_WCHAR_AWARE
 #include <canna/jrkanji.h>
 
+#define DEBUGM(...) fprintf(stderr, __VA_ARGS__)
+
 
 typedef
 struct {
@@ -20,11 +22,11 @@ public:
 	virtual ~CannaUI(void);
 	IBusText* getKanjiList(void);
 	IBusText* getEcho(void);
-	int sendKey(int key, std::string& converted);
+	bool sendKey(int key, std::string& converted);
 //	void setHenkanMode();
 	
 private:
-	wcKanjiStatus kanjiStatus;
+	jrKanjiStatus kanjiStatus;
 	unsigned char buf[BUF_SIZE];
 };
 

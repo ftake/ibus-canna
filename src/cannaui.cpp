@@ -6,44 +6,43 @@
 #include <unicode/unistr.h>
 
 // Utility functions
-#define DEBUGM(...) fprintf(stderr, __VA_ARGS__)
 
-/*
 static void convertToUTF8(unsigned char* src, std::string& dst) {
 	icu::UnicodeString ubuf(reinterpret_cast<char*>(src), "euc-jp");
 	ubuf.toUTF8String(dst);
 }
+
 static void convertToUTF8(char* src, std::string& dst) {
 	icu::UnicodeString ubuf(src, "euc-jp");
 	ubuf.toUTF8String(dst);
 }
-*/
 
+/*
 static void convertToUTF8(const cannawc* src, std::string& dst) {
-	icu::UnicodeString ubuf((char*)src, "UTF32LE");
+	icu::UnicodeString ubuf((char*)src, "UCS-4-INTERNAL");
 	ubuf.toUTF8String(dst);
 }
-
+*/
 
 // end
 
 CannaUI::CannaUI(CannaUISettings* settings) {
-	int ret = wcKanjiControl(0, KC_INITIALIZE, 0);
+	int ret = jrKanjiControl(0, KC_INITIALIZE, 0);
 	if (ret < 0) {
 		DEBUGM("KC_INITIALIZE: %d", ret);
 	}
 	
-	wcKanjiStatusWithValue statusv;
-	cannawc buf[8];
+	jrKanjiStatusWithValue statusv;
+	unsigned char buf[8];
 	statusv.ks = &kanjiStatus;
 	statusv.buffer = buf;
-	statusv.n_buffer = 8;
+	statusv.bytes_buffer = 8;
 	statusv.val = CANNA_MODE_HenkanMode;
-	wcKanjiControl(0, KC_CHANGEMODE, (char*)&statusv);
+	jrKanjiControl(0, KC_CHANGEMODE, (char*)&statusv);
 }
 
 CannaUI::~CannaUI() {
-	wcKanjiControl(0, KC_FINALIZE, 0);
+	jrKanjiControl(0, KC_FINALIZE, 0);
 }
 
 
@@ -65,25 +64,28 @@ IBusText* CannaUI::getEcho(void) {
 		convertToUTF8(kanjiStatus.echoStr, s);
 	}
 	IBusText* result = ibus_text_new_from_string(s.c_str());
-	DEBUGM("getEcho: %s\n", s.c_str());
+	DEBUGM("getEcho: \"%s\"\n", s.c_str());
 //	ibus_text_append_atribute(result, IBUSXX, from, to);
 	return result;
 }
 
 /**
- * @return  length of converted string bytes
+ * @return true: the key is handled by canna
  */
-int CannaUI::sendKey(int key, std::string& converted) {
-	cannawc buffer[BUF_SIZE];
-	int ret = wcKanjiString(0, key, buffer, 1024, &kanjiStatus);
-	DEBUGM("sendKey: key = %d, ret = %d\n", key, ret);
+bool CannaUI::sendKey(int key, std::string& converted) {
+	char buffer[BUF_SIZE];
+	int ret = jrKanjiString(0, key, buffer, 1024, &kanjiStatus);
+
+	if ((kanjiStatus.info & KanjiThroughInfo) != 0) {
+		return false;
+	}
+
 	if (ret != 0) {
 		convertToUTF8(buffer, converted);
-		return converted.length();
-	} else {
-		return 0;
 	}
+	return true;
 }
+
 
 /*
 void CannaUI::setHenkanMode() {

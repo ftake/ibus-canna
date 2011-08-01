@@ -32,7 +32,7 @@ init (void)
 
     int ret = ibus_bus_request_name (bus, "org.freedesktop.IBus.Canna", 0);
 	if (ret == 0) {
-		DEBUGM("request_name failed\n");
+//		DEBUGM("request_name failed\n");
 	}
 
     component = ibus_component_new ("org.freedesktop.IBus.Canna",
@@ -45,7 +45,7 @@ init (void)
                                     "ibus-canna");
     ibus_component_add_engine (component,
                                ibus_engine_desc_new ("ibus-canna",
-                                                     "Component for Canna",
+                                                     "Canna",
                                                      "Component for Canna",
                                                      "ja",
                                                      "GPL",
@@ -54,7 +54,7 @@ init (void)
                                                      "ja"));
     gboolean bret = ibus_bus_register_component (bus, component);
 	if (bret == FALSE) {
-		DEBUGM("register_component failed.\n");
+//		DEBUGM("register_component failed.\n");
 	}
 }
 

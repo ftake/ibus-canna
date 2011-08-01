@@ -217,6 +217,26 @@ static void ibus_canna_engine_hide_auxiliary_text(IBusCannaEngine* engine) {
 }
 */
 
+
+static guint convertKey(int keyval) {
+	switch (keyval) {
+	case IBUS_Left:
+		return CANNA_KEY_Left;
+	case IBUS_Right:
+		return CANNA_KEY_Right;
+	case IBUS_Up:
+		return CANNA_KEY_Up;
+	case IBUS_Down:
+		return CANNA_KEY_Down;
+	case IBUS_BackSpace:
+		return 22;   //keycode
+	case IBUS_Delete:
+		return 119;  //keycode
+	default:
+		return keyval;
+	}
+}
+
 static gboolean ibus_canna_engine_process_key_event(
 		IBusEngine *engine,
 		guint keyval,
@@ -230,14 +250,18 @@ static gboolean ibus_canna_engine_process_key_event(
 		return FALSE;
 	}
 
-	DEBUGM("key_event\n");
-	int ret = cannaEngine->canna->sendKey(keyval, commitStr);
-	if (ret > 0) {
-		ibus_canna_engine_commit_string(cannaEngine, commitStr.c_str());
+	int handled = cannaEngine->canna->sendKey(convertKey(keyval), commitStr);
+	DEBUGM("key_event: keyval=%d, keycode=%d\n", keyval, keycode);
+	DEBUGM("key_event: handled=%d, commited=\"%s\"(%d)\n", handled, commitStr.c_str(), commitStr.size());
+	if (handled) {
+		if (!commitStr.empty()) {
+			ibus_canna_engine_commit_string(cannaEngine, commitStr.c_str());
+		}
+		ibus_canna_engine_update(cannaEngine);
+		return TRUE;
+	} else {
+		return FALSE;
 	}
-
-	ibus_canna_engine_update(cannaEngine);
-	return TRUE;
 
 /*
 	IBusText *text;
