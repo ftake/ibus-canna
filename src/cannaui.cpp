@@ -6,14 +6,18 @@
 #include <unicode/unistr.h>
 
 // Utility functions
+static void convertToUTF8(const std::string& src, std::string& dst) {
+	icu::UnicodeString ubuf(const_cast<char*>(src.c_str()), "euc-jp");
+	ubuf.toUTF8String(dst);
+}
 
 static void convertToUTF8(unsigned char* src, std::string& dst) {
 	icu::UnicodeString ubuf(reinterpret_cast<char*>(src), "euc-jp");
 	ubuf.toUTF8String(dst);
 }
 
-static void convertToUTF8(char* src, std::string& dst) {
-	icu::UnicodeString ubuf(src, "euc-jp");
+static void convertToUTF8(const char* src, std::string& dst) {
+	icu::UnicodeString ubuf(const_cast<char*>(src), "euc-jp");
 	ubuf.toUTF8String(dst);
 }
 
@@ -25,6 +29,35 @@ static void convertToUTF8(const cannawc* src, std::string& dst) {
 */
 
 // end
+
+CannaText::CannaText(const char* str, const int revPos,
+					 const int revLen) {
+	std::string beforeRevEUC(str, revPos);
+	std::string reverseEUC(str + revPos, revLen);
+	std::string afterRevEUC(str + revPos + revLen);
+
+	convertToUTF8(beforeRevEUC, uText);
+	std::string uRev;
+	convertToUTF8(reverseEUC, uRev);
+	std::string uAfterRev;
+	convertToUTF8(afterRevEUC, uAfterRev);
+	this->revPos = uText.size();
+	this->revLen = uRev.size();
+	uText.append(uRev);
+	uText.append(uAfterRev);
+}
+
+CannaText::~CannaText(void) {
+
+}
+
+IBusText* CannaText::getIBusText() {
+	IBusText* result = ibus_text_new_from_string(uText.c_str());
+	ibus_text_append_attribute(result, IBUS_ATTR_TYPE_BACKGROUND, 0x00FFFF, revPos, revPos + revLen);
+//	ibus_text_append_attribute(result, IBUS_ATTR_TYPE_FOREGROUND, 0xFFFFFF, revPos, revPos + revLen);
+	return result;
+}
+
 
 CannaUI::CannaUI(CannaUISettings* settings) {
 	int ret = jrKanjiControl(0, KC_INITIALIZE, 0);
@@ -59,14 +92,36 @@ IBusText* CannaUI::getKanjiList(void) {
 }
 
 IBusText* CannaUI::getEcho(void) {
-	std::string s;
-	if (kanjiStatus.length > 0) {
-		convertToUTF8(kanjiStatus.echoStr, s);
+	if (kanjiStatus.length == 0) {
+		return ibus_text_new_from_string("");
 	}
-	IBusText* result = ibus_text_new_from_string(s.c_str());
-	DEBUGM("getEcho: \"%s\"\n", s.c_str());
-//	ibus_text_append_atribute(result, IBUSXX, from, to);
-	return result;
+	/*
+	int revPos = kanjiStatus.revPos;
+	int revLen = kanjiStatus.revLen;
+	std::string beforeRevEUC((char*)kanjiStatus.echoStr, revPos);
+	std::string reverseEUC((char*)kanjiStatus.echoStr + revPos, revLen);
+	std::string afterRevEUC((char*)kanjiStatus.echoStr + revPos + revLen);
+
+	std::string beforeRev;
+	convertToUTF8(beforeRevEUC.c_str(), beforeRev);
+	std::string reverse;
+	convertToUTF8(reverseEUC.c_str(), reverse);
+	std::string afterRev;
+	convertToUTF8(afterRevEUC.c_str(), afterRev);
+
+	int u8RevPos = beforeRev.length();
+	int u8RevLen = reverse.length();
+	beforeRev.append(reverse);
+	beforeRev.append(afterRev);
+
+	IBusText* result = ibus_text_new_from_string(beforeRev.c_str());
+	DEBUGM("getEcho: \"%s\"\n", beforeRev.c_str());
+//	ibus_text_append_attribute(result, IBUS_ATTR_TYPE_UNDERLINE, 0, u8RevPos, u8RevPos + u8RevLen);
+	ibus_text_append_attribute(result, IBUS_ATTR_TYPE_BACKGROUND, 0x00FFFF, u8RevPos, u8RevPos + u8RevLen);
+	ibus_text_append_attribute(result, IBUS_ATTR_TYPE_BACKGROUND, 0x00FFFF, u8RevPos, u8RevPos + u8RevLen);
+	*/
+	CannaText ctext((char*)kanjiStatus.echoStr, kanjiStatus.revPos, kanjiStatus.revLen);
+	return ctext.getIBusText();
 }
 
 /**

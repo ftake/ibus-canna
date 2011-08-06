@@ -30,4 +30,16 @@ private:
 	unsigned char buf[BUF_SIZE];
 };
 
+
+class CannaText {
+private:
+	std::string uText;
+	int revPos;
+	int revLen;
+public:
+	CannaText(const char* str, const int revPos, const int revLen);
+	virtual ~CannaText(void);
+	IBusText* getIBusText(void);
+};
+
 #endif
