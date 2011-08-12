@@ -143,22 +143,10 @@ static void ibus_canna_engine_update_lookup_table(IBusCannaEngine *engine) {
 static void ibus_canna_engine_update_preedit (IBusCannaEngine *engine) {
     IBusText *text;
     text = engine->canna->getEcho();
-/*
-    text->attrs = ibus_attr_list_new ();
-    ibus_attr_list_append(
-		text->attrs,
-		ibus_attr_underline_new(
-			IBUS_ATTR_UNDERLINE_SINGLE, 0,
-			#len));
-    ibus_attr_list_append(
-		text->attrs,
-		ibus_attr_foreground_new(
-			0x0000ff, 0, #len));
-*/
 	ibus_engine_update_preedit_text(
 			reinterpret_cast<IBusEngine*>(engine),
 			text,
-			0, //engine->cursor_pos,
+			ibus_text_get_length(text), // cursor pos
 			TRUE);
 }
 
@@ -229,7 +217,7 @@ static guint convertKey(int keyval) {
 	case IBUS_Down:
 		return CANNA_KEY_Down;
 	case IBUS_BackSpace:
-		return 22;   //keycode
+		return '\b';   //keycode
 	case IBUS_Delete:
 		return 119;  //keycode
 	default:

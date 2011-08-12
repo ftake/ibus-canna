@@ -16,6 +16,20 @@ struct {
 
 static const int BUF_SIZE = 1024;
 
+
+class CannaText {
+private:
+	std::string uText;
+	int revPos;
+	int revLen;
+	int length; // number of letters (not byte size)
+public:
+	CannaText(const char* str, const int revPos, const int revLen);
+	virtual ~CannaText(void);
+	IBusText* getIBusText(void);
+	int getLength();
+};
+
 class CannaUI {
 public:
 	CannaUI(CannaUISettings* settings);
@@ -28,18 +42,7 @@ public:
 private:
 	jrKanjiStatus kanjiStatus;
 	unsigned char buf[BUF_SIZE];
+	CannaText* echo;
+	CannaText* kanjiList;
 };
-
-
-class CannaText {
-private:
-	std::string uText;
-	int revPos;
-	int revLen;
-public:
-	CannaText(const char* str, const int revPos, const int revLen);
-	virtual ~CannaText(void);
-	IBusText* getIBusText(void);
-};
-
 #endif
