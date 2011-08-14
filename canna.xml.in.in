@@ -1,0 +1,27 @@
+<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<!-- filename: canna.xml -->
+<component>
+	<name>org.freedesktop.IBus.Canna</name>
+	<description>Canna Component</description>
+	<exec>${libexecdir}/ibus-engine-canna</exec>
+	<version>@VERSION@</version>
+	<author>Fuminobu TAKEYAMA &lt;ftake@geeko.jp&gt;</author>
+	<license>New BSD</license>
+	<homepage>https://github.com/ftake/ibus-canna</homepage>
+	<textdomain>ibus-canna</textdomain>
+
+	<engines>
+		<engine>
+			<name>Canna</name>
+			<language>ja</language>
+			<license>New BSD</license>
+			<author>Fuminobu TAKEYAMA &lt;ftake@geeko.jp&gt;</author>
+			<icon></icon>
+			<layout>jp</layout>
+			<longname>Canna</longname>
+			<description>Canna Input Method</description>
+			<rank>0</rank>
+		</engine>
+	</engines>
+
+</component>
