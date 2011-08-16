@@ -3,7 +3,7 @@
 <component>
 	<name>org.freedesktop.IBus.Canna</name>
 	<description>Canna Component</description>
-	<exec>${libexecdir}/ibus-engine-canna</exec>
+	<exec>${libexecdir}/ibus-canna/ibus-engine-canna</exec>
 	<version>@VERSION@</version>
 	<author>Fuminobu TAKEYAMA &lt;ftake@geeko.jp&gt;</author>
 	<license>New BSD</license>

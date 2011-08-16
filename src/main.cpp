@@ -14,9 +14,10 @@ ibus_disconnected_cb (IBusBus  *bus,
     ibus_quit ();
 }
 
+#define STR(x) _STR(x)
+#define _STR(x) #x
 
-static void
-init (void)
+static void init (void)
 {
     IBusComponent *component;
 
@@ -34,27 +35,32 @@ init (void)
 	if (ret == 0) {
 //		DEBUGM("request_name failed\n");
 	}
-
-    component = ibus_component_new ("org.freedesktop.IBus.Canna",
+	
+	//component = ibus_component_new_from_file(STR(COMPONENT_PATH));
+	//fprintf(stderr, "xml file is: %s\n", STR(COMPONENT_PATH));
+	//if (component == 0) {
+	//	fprintf(stderr, "couldn't create ibus_component\n");
+	//}
+	component = ibus_component_new ("org.freedesktop.IBus.Canna",
                                     "Component for Canna",
                                     "0.1.0",
-                                    "GPL",
-                                    "F. Takeyama",
-                                    "http://code.google.com/p/ibus/",
+                                    "New BSD",
+                                    "Fuminobu TAKEYAMA",
+                                    "http://github.com/ftake/ibus-canna/",
                                     "",
                                     "ibus-canna");
-    ibus_component_add_engine (component,
-                               ibus_engine_desc_new ("ibus-canna",
-                                                     "Canna",
-                                                     "Component for Canna",
-                                                     "ja",
-                                                     "GPL",
-                                                     "F. Takeyama",
-                                                     "",
-                                                     "ja"));
+     ibus_component_add_engine (component,
+                                ibus_engine_desc_new ("ibus-canna",
+                                                      "Canna",
+                                                      "Component for Canna",
+                                                      "ja",
+                                                      "New BSD",
+                                                      "Fuminobu TAKEYAMA",
+                                                      "", //icon
+                                                      "jp"));
     gboolean bret = ibus_bus_register_component (bus, component);
 	if (bret == FALSE) {
-//		DEBUGM("register_component failed.\n");
+		fprintf(stderr, "register_component failed.\n");
 	}
 }
 

@@ -1,7 +1,7 @@
 SUBDIRS = src
 
 component_DATA = canna.xml
-componentdir = @datadir@/ibus/component
+componentdir = @IBUS_COMPONENT_DIR@
 
 EXTRA_DIST = canna.xml.in
 CLEANFILES = canna.xml
