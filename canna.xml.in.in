@@ -12,7 +12,7 @@
 
 	<engines>
 		<engine>
-			<name>Canna</name>
+			<name>ibus-canna</name>
 			<language>ja</language>
 			<license>New BSD</license>
 			<author>Fuminobu TAKEYAMA &lt;ftake@geeko.jp&gt;</author>
