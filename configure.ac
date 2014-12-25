@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT(ibus-canna, 0.0.0, http://github.com/ftake/ibus-canna)
+AC_INIT(ibus-canna, 0.0.1, http://github.com/ftake/ibus-canna)
 AM_INIT_AUTOMAKE
 #AM_CPPFLAGS=
 AC_CONFIG_SRCDIR([src/engine.h])
